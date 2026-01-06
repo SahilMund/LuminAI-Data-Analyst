@@ -1,4 +1,4 @@
-from typing import List, Any, Annotated, Dict
+from typing import List, Any, Annotated, Dict, Optional
 from typing_extensions import TypedDict
 import operator
 from langchain_core.language_models import BaseLLM
@@ -13,48 +13,40 @@ logger = get_logger(__name__)
 
 
 def clean_sql_query(query):
-    # Remove backticks and newlines
-    cleaned = query.replace('`', '').replace('\n', ' ')
+    # 1. Remove markdown code blocks if present
+    query = query.replace('```sql', '').replace('```', '')
+    
+    # 2. Replace backticks with double quotes for PostgreSQL
+    cleaned = query.replace('`', '"').replace('\n', ' ')
 
-    # Remove any extra spaces
-    cleaned = ' '.join(cleaned.split())
+    # 3. Collapse multiple spaces
+    cleaned = ' '.join(cleaned.split()).strip()
 
-    # Remove the trailing '```' if present
-    cleaned = cleaned.rstrip('`')
+    # 4. Remove any errant trailing quotes that might be left from stripping backticks
+    # only if they are unbalanced (logic usually handled by LLM, but being safe)
+    if cleaned.count('"') % 2 != 0:
+        cleaned = cleaned.rstrip('"').lstrip('"')
 
     return cleaned
 
 
-class InputState(TypedDict):
+class AgentState(TypedDict):
     question: str
     schema: List[Dict]
-    parsed_question: dict
-    sql_query: str
-    sql_valid: bool
-    sql_issues: str
-    query_result: List[Any]
-    recommended_visualization: str
-    reason: str
-    visualization: Annotated[str, operator.add]
-    visualization_reason: Annotated[str, operator.add]
-    formatted_data_for_visualization: Dict[str, Any]
-
-
-class OutputState(TypedDict):
-    parsed_question: Dict[str, Any]
-    unique_nouns: List[str]
-    sql_query: str
-    sql_valid: bool
-    sql_issues: str
-    query_result: List[Any]
-    recommended_visualization: str
-    reason: str
-    results: List[Any]
+    parsed_question: Optional[Dict[str, Any]]
+    unique_nouns: Optional[List[str]]
+    sql_query: Optional[str]
+    sql_valid: Optional[bool]
+    sql_issues: Optional[str]
+    query_result: Optional[List[Any]]
+    recommended_visualization: Optional[str]
+    reason: Optional[str]
+    results: Optional[List[Any]]
     answer: Annotated[str, operator.add]
-    error: str
+    error: Optional[str]
     visualization: Annotated[str, operator.add]
     visualization_reason: Annotated[str, operator.add]
-    formatted_data_for_visualization: Dict[str, Any]
+    formatted_data_for_visualization: Optional[Dict[str, Any]]
 
 
 class WorkflowManager:
@@ -109,7 +101,7 @@ class WorkflowManager:
 
     def create_workflow(self) -> StateGraph:
         """Create and configure the workflow graph."""
-        workflow = StateGraph(input=InputState, output=OutputState)
+        workflow = StateGraph(AgentState)
 
         # Add nodes to the graph
         workflow.add_node("parse_question", self.sql_agent.get_parse_question)

@@ -56,9 +56,9 @@ async def ask_question(id: int, body: AskQuestion, db: DB):
                 llm_model=body.llm_model
             )
         else:
-            print("execure_document_chat")
+            print("execute_document_chat")
             return execute_document_chat(
-                body.question, "text-embedding-3-large", "speech_81a36223")
+                body.question, "sentence-transformers/all-MiniLM-L6-v2", data_source.table_name, body.conversaction_id, db, body.llm_model)
 
     except HTTPException as he:
         return JSONResponse(status_code=500, content=create_response(

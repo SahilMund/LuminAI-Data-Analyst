@@ -15,6 +15,8 @@ python-dotenv
 pytest
 langchain
 langgraph
+langchain-core
+langchain-classic
 langchain-openai
 langchain-groq
 langchain-ollama
@@ -26,3 +28,4 @@ langchain-huggingface
 pypdf
 python-multipart
 alembic
+sentence-transformers

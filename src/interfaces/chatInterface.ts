@@ -5,7 +5,7 @@ export interface ChatRequestBody {
   conversaction_id: number;
   dataset_id: number;
   selected_tables: string[];
-  llm_model:string
+  llm_model: string
 }
 
 export type StreamCallback = (chunk: string) => void;
@@ -48,12 +48,13 @@ export interface ProcessingMessage {
   original: string;
 }
 
-export interface AiAnswer{
+export interface AiAnswer {
   answer?: string,
   formatted_data_for_visualization?: object[],
-  recommended_visualization?: string
+  recommended_visualization?: string,
+  source_documents?: any[]
 }
-export interface ConversationMessages{
+export interface ConversationMessages {
   user_question?: string,
   ai_answer?: AiAnswer,
 }
@@ -61,7 +62,7 @@ export interface ConversationMessages{
 export interface Conversations {
   id: number;
   title: string;
-  created_at:string
+  created_at: string
 }
 
 export interface ConversationsResponse {

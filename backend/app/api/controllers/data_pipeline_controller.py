@@ -109,7 +109,7 @@ async def upload_document(id: int, file: UploadFile, db: DB) -> JSONResponse:
     try:
         logger.info(f"Processing file: {file.filename}")
         session = db.create_session()
-        vector_db.initialize_embedding(model_name="text-embedding-3-large")
+        vector_db.initialize_embedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
         # Validate file extension
         if not file.filename.lower().endswith(('.pdf', '.doc', '.txt')):
             return JSONResponse(status_code=400, content=create_response(
@@ -147,7 +147,10 @@ async def upload_document(id: int, file: UploadFile, db: DB) -> JSONResponse:
         return JSONResponse(status_code=201, content=create_response(
             status_code=201,
             message="Data uploaded successfully",
-            data={"table_name": table_name},
+            data={
+                "table_name": table_name,
+                "data_source_id": new_data_source.id
+            },
         ))
 
     except HTTPException as he:
@@ -165,7 +168,7 @@ async def upload_document(id: int, file: UploadFile, db: DB) -> JSONResponse:
             data={"error": str(e)}
         ))
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logger.exception(f"Unexpected error: {str(e)}")
         return JSONResponse(status_code=500, content=create_response(
             status_code=500,
             message="An unexpected error occurred",

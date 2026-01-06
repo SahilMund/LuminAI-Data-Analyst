@@ -34,7 +34,7 @@ const SelectDataset: React.FC = () => {
 
   useEffect(() => {
     if (dataSet?.type === 'url' && dataSet?.connection_url) {
-      getTables({db_url:dataSet?.connection_url})
+      getTables({ db_url: dataSet?.connection_url })
     }
   }, [dataSet]);
 
@@ -83,9 +83,8 @@ const SelectDataset: React.FC = () => {
               onChange={(e) => setModel(e.target.value)}
             >
               <option value="">Select LLM Model</option>
-              <option value="gemma2-9b-it">gemma2-9b</option>
-              <option value="mixtral-8x7b-32768">mixtral-8x7b</option>
-              <option value="llama3-8b-8192">llama3-8b</option>
+              <option value="llama-3.1-8b-instant">Llama 3.1 8B</option>
+              <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
             </select>
             <div
               className={`mr-l pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700`}

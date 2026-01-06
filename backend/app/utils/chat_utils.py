@@ -2,8 +2,8 @@ from app.langgraph.workflows.sql_workflow import WorkflowManager
 from app.config.llm_config import LLM
 from app.config.db_config import DB, VectorDB
 from fastapi.responses import StreamingResponse, JSONResponse
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+from langchain_classic.chains import RetrievalQA
+from langchain_core.prompts import PromptTemplate
 from typing import List, Optional
 from app.config.logging_config import get_logger
 from app.api.db.chat_history import Messages, Conversations
@@ -18,7 +18,7 @@ llm_instance = LLM()
 vectorDB_instance = VectorDB()
 
 
-def execute_workflow(question: str, conversation_id: int, table_list: List[str],llm_model:Optional[str] = "gemma2-9b-it", system_db: Optional[DB] = None, db_url: Optional[str] = None):
+def execute_workflow(question: str, conversation_id: int, table_list: List[str],llm_model:Optional[str] = "llama-3.1-8b-instant", system_db: Optional[DB] = None, db_url: Optional[str] = None):
 
     # Initialize db variable
     db: DB
@@ -92,7 +92,7 @@ def serialize_document(doc):
     }
 
 
-def execute_document_chat(question: str, embedding_model: str, table_name: str):
+def execute_document_chat(question: str, embedding_model: str, table_name: str, conversation_id: int, system_db: DB, llm_model: str = "llama-3.1-8b-instant"):
     try:
         # Initialize embedding
         vectorDB_instance.initialize_embedding(embedding_model)
@@ -101,10 +101,10 @@ def execute_document_chat(question: str, embedding_model: str, table_name: str):
         vector_store = vectorDB_instance.get_vector_store(table_name)
 
         # Initialize LLM
-        llm = llm_instance.groq("gemma2-9b-it")
+        llm = llm_instance.groq(llm_model)
 
         # Create a prompt template
-        prompt_template = """You are Lumin, an advanced data analysis assistant, analyze the following context to answer the question. Follow these guidelines:
+        prompt_template = """You are LUMIN, an advanced data analysis assistant. Analyze the following context to answer the question. Follow these guidelines:
 
         1. Use only the information provided in the context.
         2. If the context doesn't contain enough information, state that clearly.
@@ -134,16 +134,30 @@ def execute_document_chat(question: str, embedding_model: str, table_name: str):
         )
 
         # Execute the chain
-        result = qa({"query": question})
-
-        # Serialize the source documents
-        serialized_docs = [serialize_document(
-            doc) for doc in result.get('source_documents', [])]
-
-        return JSONResponse(status_code=200, content={
+        result = qa.invoke({"query": question})
+        
+        # Prepare content for saving and streaming
+        content = {
             "answer": result['result'],
-            "source_documents": serialized_docs
-        })
+            "source_documents": [serialize_document(doc) for doc in result.get('source_documents', [])]
+        }
+        
+        # Save message to database
+        save_message(
+            conversation_id=conversation_id,
+            role="assistant",
+            content=content,
+            db=system_db
+        )
+
+        async def document_stream():
+            try:
+                # To match frontend expectations, we yield the content as a JSON string
+                yield json.dumps(content) + "\n"
+            except Exception as e:
+                yield json.dumps({"error": str(e)}) + "\n"
+
+        return StreamingResponse(document_stream(), media_type="text/event-stream")
 
     except Exception as e:
         print(f"Error in simple_document_chat: {str(e)}")

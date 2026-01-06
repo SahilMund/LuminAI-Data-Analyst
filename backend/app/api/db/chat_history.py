@@ -11,7 +11,7 @@ class Conversations(Base):
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     data_source_id = Column(Integer, ForeignKey("data_sources.id"))
-    title = Column(String(200), nullable=True),
+    title = Column(String(200), nullable=True)
     created_at = Column("created_at", DateTime, default=datetime.utcnow)
     updated_at = Column("updated_at", DateTime, default=datetime.utcnow)
 

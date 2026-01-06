@@ -7,61 +7,63 @@ graph_prompt_templates: Dict[str, Dict[str, str]] = {
         "human": '''Question: {question}
         Data: {data}
 
-        Provide a bar chart structure in the following format:
+        Provide a bar chart structure in the following valid JSON format:
         {{
-        labels: string[],
-        values: {{ data: number[], label: string }}[]
+        "labels": ["string"],
+        "values": [{{ "data": [0], "label": "string" }}]
         }}
-        Ensure the structure is relevant to the question and data provided, dont return any additional string, return only the data in json formate'''
+        Ensure the structure is relevant to the question and data provided. Return ONLY the JSON object.'''
     },
     "horizontal_bar": {
         "system": '''You are a data visualization expert. Given a question and some data, provide a concise and relevant structure for a horizontal bar chart.''',
         "human": '''Question: {question}
         Data: {data}
 
-        Provide a horizontal bar chart structure in the following format:
+        Provide a horizontal bar chart structure in the following valid JSON format:
         {{
-        labels: string[],
-        values: {{ data: number[], label: string }}[]
+        "labels": ["string"],
+        "values": [{{ "data": [0], "label": "string" }}]
         }}
-        Ensure the structure is relevant to the question and data provided, dont return any additional string, return only the data in json format'''
+        Ensure the structure is relevant to the question and data provided. Return ONLY the JSON object.'''
     },
     "line": {
         "system": '''You are a data visualization expert. Given a question and some data, provide a concise and relevant structure for a line graph.''',
         "human": '''Question: {question}
         Data: {data}
 
-        Provide a line graph structure in the following format:
+        Provide a line graph structure in the following valid JSON format:
         {{
-        xValues: number[] | string[],
-        yValues: {{ data: number[], label: string }}[]
+        "xValues": ["string"],
+        "yValues": [{{ "data": [0], "label": "string" }}]
         }}
-        Ensure the structure is relevant to the question and data provided, dont return any additional string, return only the data in json format'''
+        Ensure the structure is relevant to the question and data provided. Return ONLY the JSON object.'''
     },
     "pie": {
         "system": '''You are a data visualization expert. Given a question and some data, provide a concise and relevant structure for a pie chart.''',
         "human": '''Question: {question}
         Data: {data}
 
-        Provide a pie chart structure in the following format:
+        Provide a pie chart structure in the following valid JSON format:
         [
-        {{ label: string, value: number }}
+        {{ "label": "string", "value": 0 }}
         ]
-        Ensure the structure is relevant to the question and data provided, dont return any additional string, return only the data in json format'''
+        Ensure the structure is relevant to the question and data provided. Return ONLY the JSON array.'''
     },
     "scatter": {
         "system": '''You are a data visualization expert. Given a question and some data, provide a concise and relevant structure for a scatter plot.''',
         "human": '''Question: {question}
         Data: {data}
 
-        Provide a scatter plot structure in the following format:
+        Provide a scatter plot structure in the following valid JSON format:
         {{
-        series: {{
-            data: {{ x: number, y: number, id: number }}[],
-            label: string
-        }}[]
+        "series": [
+            {{
+                "data": [{{ "x": 0, "y": 0, "id": 0 }}],
+                "label": "string"
+            }}
+        ]
         }}
-        Ensure the structure is relevant to the question and data provided, dont return any additional string, return only the data in json format'''
+        Ensure the structure is relevant to the question and data provided. Return ONLY the JSON object.'''
     }
 }
 

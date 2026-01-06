@@ -25,7 +25,7 @@ export default function Chat() {
   const setTables = dataSetStore((state) => state.setTables);
   const selectedModel = dataSetStore((state) => state.selectedModel);
   // Get the data_source_id from URL parameters
-  const { data_source_id,conversation_id } = useParams();
+  const { data_source_id, conversation_id } = useParams();
   const {
     mutate: sendMessage,
     // streamData,
@@ -37,35 +37,38 @@ export default function Chat() {
       console.log('Received data:', data);
     },
     onSuccess: (data) => {
-      const ai_answer:any = {}
-      data.forEach((message:any) => {
-        if(message.answer){
+      const ai_answer: any = {}
+      data.forEach((message: any) => {
+        if (message.answer) {
           ai_answer["answer"] = message.answer
         }
-        if(message.formatted_data_for_visualization){
+        if (message.formatted_data_for_visualization) {
           ai_answer["formatted_data_for_visualization"] = message.formatted_data_for_visualization
         }
-        if(message.recommended_visualization){
+        if (message.recommended_visualization) {
           ai_answer["recommended_visualization"] = message.recommended_visualization
+        }
+        if (message.source_documents) {
+          ai_answer["source_documents"] = message.source_documents
         }
       })
       setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        ai_answer: ai_answer
-      },
-    ]);
+        ...prevMessages,
+        {
+          ai_answer: ai_answer
+        },
+      ]);
     }
   });
 
   useEffect(() => {
-    const filteredDataSet = dataSets?.filter((dataSet) => dataSet.id === Number(data_source_id))
-    if(filteredDataSet?.length > 0){
-      setTables([filteredDataSet[0]?.table_name || '']) 
-      setDatasetType(filteredDataSet[0]?.type) 
+    const filteredDataSet = dataSets?.filter((dataSet) => dataSet.id === Number(data_source_id)) || [];
+    if (filteredDataSet.length > 0) {
+      setTables([filteredDataSet[0]?.table_name || ''])
+      setDatasetType(filteredDataSet[0]?.type)
     }
   }, [data_source_id])
-  
+
 
   const askQuestion = () => {
     // Safely spread messages, handling empty array case
@@ -78,13 +81,13 @@ export default function Chat() {
       type: datasetType || 'url',
       conversaction_id: Number(conversation_id),
       dataset_id: Number(data_source_id),
-      selected_tables:tables,
-      llm_model:selectedModel
+      selected_tables: tables,
+      llm_model: selectedModel
     })
   };
 
   console.log(selectedModel);
-  console.log("TABLES",tables);
+  console.log("TABLES", tables);
 
   return (
     <div className="flex flex-col py-8 pr-8 h-screen">
@@ -117,16 +120,29 @@ export default function Chat() {
                         <TypewriterWithHighlight text={message.ai_answer.answer || ""} />
                       </div>
 
-                        {
-                          message?.ai_answer?.formatted_data_for_visualization && (
-                            <div className="w-full h-[400px]">
+                      {message.ai_answer.source_documents && message.ai_answer.source_documents.length > 0 && (
+                        <div className="mt-4 border-t border-gray-200 pt-3">
+                          <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Sources:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {message.ai_answer.source_documents.map((doc: any, docIndex: number) => (
+                              <div key={docIndex} className="text-[10px] bg-white text-navy-600 px-2 py-1 rounded border border-blue-100 flex items-center shadow-sm">
+                                <span className="font-medium truncate max-w-[150px]">{doc.metadata?.source || `Doc ${docIndex + 1}`}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {
+                        message?.ai_answer?.formatted_data_for_visualization && (
+                          <div className="w-full h-[400px]">
                             <ChartComponent
                               type={message?.ai_answer?.recommended_visualization || ""}
                               data={message?.ai_answer?.formatted_data_for_visualization}
                             />
                           </div>
-                          )
-                        }
+                        )
+                      }
 
                     </div>
                   )}

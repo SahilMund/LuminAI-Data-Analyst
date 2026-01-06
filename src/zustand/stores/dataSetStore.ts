@@ -4,8 +4,8 @@ import { DataSources } from '../../interfaces/dataSourceInterface';
 
 export interface DataSetStore {
   dataSets: DataSources[] | null;
-  tables: string[] ;
-  selectedModel:string ;
+  tables: string[];
+  selectedModel: string;
   setTables: (tables: string[]) => void;
   setModel: (model: string) => void;
   setDataSet: (dataSets: DataSources[]) => void;
@@ -17,11 +17,11 @@ export interface DataSetStore {
 
 const dataSetStore = create<DataSetStore>((set) => ({
   dataSets: null,
-  tables:[],
-  selectedModel:"gemma2-9b-it",
+  tables: [],
+  selectedModel: "llama-3.1-8b-instant",
 
   setTables: (tables: string[]) => set({ tables }),
-  setModel: (model:string) => set({ selectedModel:model }),
+  setModel: (model: string) => set({ selectedModel: model }),
 
   setDataSet: (dataSets: DataSources[]) => set({ dataSets }),
 

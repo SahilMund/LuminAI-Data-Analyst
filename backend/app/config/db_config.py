@@ -2,13 +2,11 @@ from typing import List, Dict, Any
 from sqlalchemy import create_engine, inspect, text, inspect
 from sqlalchemy.orm import sessionmaker, Session
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_openai import OpenAIEmbeddings
 from app.config.logging_config import get_logger
 # from langchain_community.vectorstores import PGVector
-from langchain_postgres import PGVector
 from langchain_postgres.vectorstores import PGVector
 from fastapi import HTTPException
-from langchain.schema import Document
+from langchain_core.documents import Document
 import pandas as pd
 from app.config.env import (DATABASE_URL)
 from typing import List, Optional
@@ -30,16 +28,16 @@ class DB:
         self.inspector = inspect(self.engine)
 
     def execute_query(self, query: str) -> list:
-        print("======== execute_query ========")
+        print(f"DEBUG_SQL: Executing Query: {query}")
         with self.session() as session:
             result = session.execute(text(query))
-            # return result
             if result.returns_rows:
-                # Convert RowProxy to dict
-                return [row for row in result.fetchall()]
+                rows = [row for row in result.fetchall()]
+                print(f"DEBUG_SQL: Query returned {len(rows)} rows")
+                return rows
             else:
-                # For non-SELECT queries, commit the transaction and return an empty list
                 session.commit()
+                print("DEBUG_SQL: Query executed successfully (no rows returned)")
                 return []
 
     def create_session(self) -> Session:
@@ -103,19 +101,20 @@ class VectorDB:
     def __init__(self):
         """Initialize VectorDB with connection string"""
         self.connection_string = DATABASE_URL
-        self._embedding: Optional[OpenAIEmbeddings] = None
+        self._embedding: Optional[HuggingFaceEmbeddings] = None
 
-    def initialize_embedding(self, model_name: str = "text-embedding-3-large"):
+    def initialize_embedding(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
         """
         Initialize the embedding model.
         """
         if self._embedding is None:
-            self._embedding = OpenAIEmbeddings(model=model_name)
+            logger.info(f"Initializing HuggingFaceEmbeddings with model: {model_name}")
+            self._embedding = HuggingFaceEmbeddings(model_name=model_name)
             return "Embedding model initialized successfully."
         return "Embedding model already initialized."
 
     @property
-    def embedding(self):
+    def embeddings(self):
         if self._embedding is None:
             raise ValueError(
                 "Embedding model not initialized. Call initialize_embedding() first.")
@@ -125,26 +124,27 @@ class VectorDB:
         """Insert documents into vector store"""
         try:
             return PGVector.from_documents(
-                embedding=self.embedding,
+                embeddings=self.embeddings,
                 documents=documents,
                 collection_name=collection_name,
                 connection=self.connection_string,
+                use_jsonb=True,
             )
         except Exception as e:
-            logger.error(f"Vector store insertion error: {str(e)}")
+            logger.exception(f"Vector store insertion error: {str(e)}")
             raise HTTPException(
-                status_code=500, detail="Failed to insert documents into vector store")
+                status_code=500, detail=f"Failed to insert documents into vector store: {str(e)}")
 
     def get_vector_store(self, collection_name: str) -> PGVector:
         """Get existing vector store"""
         try:
             return PGVector(
                 connection=self.connection_string,
-                embeddings=self.embedding,
+                embeddings=self.embeddings,
                 collection_name=collection_name,
-                pre_delete_collection=False
+                use_jsonb=True,
             )
         except Exception as e:
-            logger.error(f"Vector store retrieval error: {str(e)}")
+            logger.exception(f"Vector store retrieval error: {str(e)}")
             raise HTTPException(
-                status_code=500, detail="Failed to retrieve vector store")
+                status_code=500, detail=f"Failed to retrieve vector store: {str(e)}")

@@ -50,7 +50,9 @@ generate_sql_query_prompt = ChatPromptTemplate.from_messages([
     3. If there isn't enough information to generate a query, return "NOT_ENOUGH_INFO".
     4. Always enclose table and column names in backticks (`) for SQL syntax consistency.
     5. Skip rows where any column is NULL, empty (''), or contains 'N/A'.
-    6. Use the exact spellings of nouns from the unique nouns list, but only include nouns that match actual column names in the schema.
+    6. Use ILIKE (instead of LIKE or =) for string comparisons to ensure case-insensitive matching if the user question involves searching for a specific value (e.g., WHERE `city` ILIKE 'Santiago').
+    7. For categorical values like gender, status, or categories, be aware of common abbreviations. If the user asks for "male" or "female" and you suspect the data uses "M" or "F", you can use the ILIKE operator with '%' or check for multiple possible variations (e.g., WHERE `gender` ILIKE 'm%' OR `gender` ILIKE 'f%') if you are unsure of the exact storage format, but prioritize the provided schema insights.
+    8. Use the exact spellings of nouns from the unique nouns list, but only include nouns that match actual column names in the schema.
     
     Here are some examples:
 

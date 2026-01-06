@@ -3,7 +3,7 @@ import { BiUpload, BiFile, BiLink, BiLoaderAlt } from 'react-icons/bi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { FiCommand } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import { useGetDataSourcesMutation, useUploadSpreadsheetMutation } from '../../hooks/useDataSet';
+import { useGetDataSourcesMutation, useUploadSpreadsheetMutation, useUploadDocumentMutation } from '../../hooks/useDataSet';
 import dataSetStore from '../../zustand/stores/dataSetStore';
 import { DataSourceTableLoader } from '../loaders/DataSourceTableLoader';
 import { useNavigate } from 'react-router-dom';
@@ -18,9 +18,10 @@ const UploadFile: React.FC<UploadFileProps> = ({ setComponent, setIsOpen }) => {
   const navigate = useNavigate();
   const [dataSourceId, setDataSourceId] = useState<number | null>();
   const dataSets = dataSetStore((state) => state.dataSets);
-  const { mutate: uploadSpreadSheet, status: uploadSpreadSheetStatus } =useUploadSpreadsheetMutation();
+  const { mutate: uploadSpreadSheet, status: uploadSpreadSheetStatus } = useUploadSpreadsheetMutation();
+  const { mutate: uploadDocument, status: uploadDocumentStatus } = useUploadDocumentMutation();
   const { mutate: getDataSource, status: dataSourceStatus } = useGetDataSourcesMutation();
-  
+
   // Redirect & close modal on conversation initiation
   const onInitiated = (conversation_id: number) => {
     navigate(`/chat/${dataSourceId}/${conversation_id}`);
@@ -62,8 +63,7 @@ const UploadFile: React.FC<UploadFileProps> = ({ setComponent, setIsOpen }) => {
         if (['csv', 'xlsx', 'xls'].includes(fileExtension)) {
           uploadSpreadSheet(file);
         } else {
-          console.log('Upload document');
-          toast.error('Chat with Text & PDF file is not ready yet, coming soon.');
+          uploadDocument(file);
         }
       } else {
         toast.error('Invalid file type. Please upload Excel, CSV, PDF, or Text files only.');
@@ -85,15 +85,15 @@ const UploadFile: React.FC<UploadFileProps> = ({ setComponent, setIsOpen }) => {
 
         <div
           className={`border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4 relative
-        ${uploadSpreadSheetStatus === 'pending' ? 'bg-blue-50' : ''}`}
+        ${uploadSpreadSheetStatus === 'pending' || uploadDocumentStatus === 'pending' ? 'bg-blue-50' : ''}`}
         >
           {/* Dark overlay when pending */}
-          {uploadSpreadSheetStatus === 'pending' && (
+          {(uploadSpreadSheetStatus === 'pending' || uploadDocumentStatus === 'pending') && (
             <div className="absolute inset-0 bg-black/10 rounded-lg" />
           )}
 
           {/* Spinner */}
-          {uploadSpreadSheetStatus === 'pending' && (
+          {(uploadSpreadSheetStatus === 'pending' || uploadDocumentStatus === 'pending') && (
             <div className="absolute inset-0 flex items-center justify-center z-20">
               <FiCommand className="w-8 h-8 text-blue-600 animate-spin" />
             </div>
@@ -125,7 +125,7 @@ const UploadFile: React.FC<UploadFileProps> = ({ setComponent, setIsOpen }) => {
           </div>
         </div>
 
-        {dataSourceStatus === 'pending' || uploadSpreadSheetStatus === 'pending' ? (
+        {dataSourceStatus === 'pending' || uploadSpreadSheetStatus === 'pending' || uploadDocumentStatus === 'pending' ? (
           <DataSourceTableLoader rows={3} />
         ) : (
           <>

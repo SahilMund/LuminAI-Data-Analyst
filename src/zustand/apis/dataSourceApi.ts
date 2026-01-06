@@ -5,25 +5,29 @@ import {
   UploadSpreadSheetResponse,
   AddDataSource,
   AddDataSourceResponse,
-  GetTablesList, 
+  GetTablesList,
   GetTablesListResponse
 } from '../../interfaces/dataSourceInterface';
 import { ApiResponse } from '../../interfaces/globalInterfaces';
 
 type ApiFunction<TInput, TOutput> = (data: TInput) => Promise<ApiResponse<TOutput>>;
 
-export const uploadSpreadsheet:ApiFunction<File, UploadSpreadSheetResponse> = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('table_name', file.name.split('.')[0]);
-    return await post(DATA_SOURCE_ENDPOINTS.UPLOAD_SPREADSHEET, formData);
-  }
+export const uploadSpreadsheet: ApiFunction<File, UploadSpreadSheetResponse> = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('table_name', file.name.split('.')[0]);
+  return await post(DATA_SOURCE_ENDPOINTS.UPLOAD_SPREADSHEET, formData);
+}
 
 
-export const uploadDocument = async () => {};
+export const uploadDocument: ApiFunction<File, UploadSpreadSheetResponse> = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return await post(DATA_SOURCE_ENDPOINTS.UPLOAD_DOCUMENT, formData);
+};
 
 export const addDataSource: ApiFunction<AddDataSource, AddDataSourceResponse> = async (data) => {
-  return await post(DATA_SOURCE_ENDPOINTS.ADD_DATA_SOURCE,data);
+  return await post(DATA_SOURCE_ENDPOINTS.ADD_DATA_SOURCE, data);
 };
 
 export const getDataSources: ApiFunction<void, GetDataSourcesResponse> = async () => {
